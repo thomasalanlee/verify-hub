@@ -25,7 +25,7 @@ public class EncryptionCertificateBuilder {
     private class TestEncryptionCertificate extends EncryptionCertificate {
         TestEncryptionCertificate(String cert) {
             this.fullCert = cert;
+            this.type = "x509";
         }
-
     }
 }

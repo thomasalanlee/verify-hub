@@ -4,6 +4,7 @@ import uk.gov.ida.common.shared.configuration.X509CertificateConfiguration;
 import uk.gov.ida.hub.config.domain.EncryptionCertificate;
 import uk.gov.ida.hub.config.domain.MatchingServiceConfigEntityData;
 import uk.gov.ida.hub.config.domain.SignatureVerificationCertificate;
+import uk.gov.ida.saml.core.test.TestCertificateStrings;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -84,7 +85,7 @@ public class MatchingServiceConfigEntityDataBuilder {
             boolean onboarding) {
 
             this.entityId = entityId;
-            this.encryptionCertificate = new X509CertificateConfiguration(null, "test", null);
+            this.encryptionCertificate = new X509CertificateConfiguration(TestCertificateStrings.HUB_TEST_PUBLIC_ENCRYPTION_CERT);
             this.signatureVerificationCertificates = Collections.emptyList();
             this.uri = uri;
             this.userAccountCreationUri = userAccountCreationUri;

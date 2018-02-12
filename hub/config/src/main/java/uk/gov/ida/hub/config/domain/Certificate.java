@@ -63,5 +63,5 @@ public abstract class Certificate {
         return getCertificate().getNotBefore();
     }
 
-    public abstract CertificateType getType();
+    public abstract CertificateType getUse();
 }

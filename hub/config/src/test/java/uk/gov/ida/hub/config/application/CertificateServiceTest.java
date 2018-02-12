@@ -15,6 +15,7 @@ import uk.gov.ida.hub.config.domain.TransactionConfigEntityData;
 import uk.gov.ida.hub.config.dto.FederationEntityType;
 import uk.gov.ida.hub.config.exceptions.CertificateDisabledException;
 import uk.gov.ida.hub.config.exceptions.NoCertificateFoundException;
+import uk.gov.ida.saml.core.test.TestCertificateStrings;
 
 import java.util.List;
 import java.util.Optional;
@@ -134,8 +135,8 @@ public class CertificateServiceTest {
 
     @Test
     public void findsSignatureVerificationCertificates_WhenTransactionSignatureCertificatesExists() throws Exception {
-        SignatureVerificationCertificate sigCert1 = aSignatureVerificationCertificate().withX509(CERT_ONE_X509).build();
-        SignatureVerificationCertificate sigCert2 = aSignatureVerificationCertificate().withX509(CERT_TWO_X509).build();
+        SignatureVerificationCertificate sigCert1 = aSignatureVerificationCertificate().withX509(TestCertificateStrings.TEST_RP_PUBLIC_SIGNING_CERT).build();
+        SignatureVerificationCertificate sigCert2 = aSignatureVerificationCertificate().withX509(TestCertificateStrings.TEST_RP_MS_PUBLIC_SIGNING_CERT).build();
 
         TransactionConfigEntityData transactionConfigEntityData = aTransactionConfigData()
                 .withEntityId(ENTITY_ID)
@@ -156,8 +157,8 @@ public class CertificateServiceTest {
 
     @Test
     public void findsOnlyValidSignatureVerificationCertificates_WhenTransactionSignatureCertificatesExists() throws Exception {
-        SignatureVerificationCertificate validCert = aSignatureVerificationCertificate().withX509(CERT_ONE_X509).build();
-        SignatureVerificationCertificate invalidCert = aSignatureVerificationCertificate().withX509(CERT_TWO_X509).build();
+        SignatureVerificationCertificate validCert = aSignatureVerificationCertificate().withX509(TestCertificateStrings.TEST_RP_PUBLIC_SIGNING_CERT).build();
+        SignatureVerificationCertificate invalidCert = aSignatureVerificationCertificate().withX509(TestCertificateStrings.TEST_RP_MS_PUBLIC_SIGNING_CERT).build();
 
         TransactionConfigEntityData transactionConfigEntityData = aTransactionConfigData()
                 .withEntityId(ENTITY_ID)
@@ -181,8 +182,8 @@ public class CertificateServiceTest {
 
     @Test
     public void findsSignatureVerificationCertificates_WhenMatchingSignatureCertificatesExists() throws Exception {
-        SignatureVerificationCertificate sigCert1 = aSignatureVerificationCertificate().withX509(CERT_ONE_X509).build();
-        SignatureVerificationCertificate sigCert2 = aSignatureVerificationCertificate().withX509(CERT_TWO_X509).build();
+        SignatureVerificationCertificate sigCert1 = aSignatureVerificationCertificate().withX509(TestCertificateStrings.TEST_RP_PUBLIC_SIGNING_CERT).build();
+        SignatureVerificationCertificate sigCert2 = aSignatureVerificationCertificate().withX509(TestCertificateStrings.TEST_RP_MS_PUBLIC_SIGNING_CERT).build();
 
         MatchingServiceConfigEntityData matchingServiceConfigEntityData = aMatchingServiceConfigEntityData()
                 .withEntityId(ENTITY_ID)
@@ -203,8 +204,8 @@ public class CertificateServiceTest {
 
     @Test
     public void findsOnlyValidSignatureVerificationCertificates_WhenMatchingSignatureCertificatesExists() throws Exception {
-        SignatureVerificationCertificate validSigCert = aSignatureVerificationCertificate().withX509(CERT_ONE_X509).build();
-        SignatureVerificationCertificate invalidSigCert = aSignatureVerificationCertificate().withX509(CERT_TWO_X509).build();
+        SignatureVerificationCertificate validSigCert = aSignatureVerificationCertificate().withX509(TestCertificateStrings.TEST_RP_PUBLIC_SIGNING_CERT).build();
+        SignatureVerificationCertificate invalidSigCert = aSignatureVerificationCertificate().withX509(TestCertificateStrings.TEST_RP_MS_PUBLIC_SIGNING_CERT).build();
 
         MatchingServiceConfigEntityData matchingServiceConfigEntityData = aMatchingServiceConfigEntityData()
                 .withEntityId(ENTITY_ID)
@@ -228,7 +229,7 @@ public class CertificateServiceTest {
 
     @Test(expected = NoCertificateFoundException.class)
     public void throwsNoCertificateFoundException_WhenMatchingSignatureCertificatesExistButAreInvalid() throws Exception {
-        SignatureVerificationCertificate invalidSigCert = aSignatureVerificationCertificate().withX509(CERT_TWO_X509).build();
+        SignatureVerificationCertificate invalidSigCert = aSignatureVerificationCertificate().withX509(TestCertificateStrings.TEST_RP_MS_PUBLIC_SIGNING_CERT).build();
 
         MatchingServiceConfigEntityData matchingServiceConfigEntityData = aMatchingServiceConfigEntityData()
                 .withEntityId(ENTITY_ID)

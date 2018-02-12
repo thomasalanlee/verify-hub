@@ -1,11 +1,9 @@
 package uk.gov.ida.hub.config.domain.builders;
 
 import uk.gov.ida.common.shared.configuration.DeserializablePublicKeyConfiguration;
+import uk.gov.ida.common.shared.configuration.X509CertificateConfiguration;
 import uk.gov.ida.hub.config.domain.SignatureVerificationCertificate;
 
-import static java.text.MessageFormat.format;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static uk.gov.ida.saml.core.test.TestCertificateStrings.HUB_TEST_PUBLIC_SIGNING_CERT;
 
 public class SignatureVerificationCertificateBuilder {
@@ -17,9 +15,7 @@ public class SignatureVerificationCertificateBuilder {
     }
 
     public SignatureVerificationCertificate build() {
-        String fullCert = format("-----BEGIN CERTIFICATE-----\n{0}\n-----END CERTIFICATE-----", x509Value.trim());
-        DeserializablePublicKeyConfiguration configuration = mock(DeserializablePublicKeyConfiguration.class);
-        when(configuration.getCert()).thenReturn(fullCert);
+        DeserializablePublicKeyConfiguration configuration = new X509CertificateConfiguration(x509Value.trim());
         return new SignatureVerificationCertificate(configuration);
     }
 

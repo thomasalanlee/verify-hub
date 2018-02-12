@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.validation.ValidationMethod;
 import uk.gov.ida.common.shared.configuration.DeserializablePublicKeyConfiguration;
+import uk.gov.ida.common.shared.configuration.X509CertificateConfiguration;
 import uk.gov.ida.hub.config.CertificateEntity;
 import uk.gov.ida.hub.config.ConfigEntityData;
 
