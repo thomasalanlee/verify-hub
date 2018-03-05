@@ -283,13 +283,6 @@ public class SamlEngineModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @Named("VerifyMetadataResolver")
-    private MetadataResolver getVerifyMetadataResolver(Environment environment, SamlEngineConfiguration configuration) {
-        return new DropwizardMetadataResolverFactory().createMetadataResolver(environment, configuration.getMetadataConfiguration());
-    }
-
-    @Provides
-    @Singleton
     @Named(VERIFY_METADATA_HEALTH_CHECK)
     private MetadataHealthCheck getVerifyMetadataHealthCheck(
         @Named("VerifyMetadataResolver") MetadataResolver metadataResolver,

@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
+import com.google.inject.name.Names;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.opensaml.saml.metadata.resolver.MetadataResolver;
 import org.slf4j.MDC;
 import uk.gov.ida.bundles.LoggingBundle;
 import uk.gov.ida.bundles.MonitoringBundle;
@@ -30,10 +32,10 @@ import uk.gov.ida.hub.samlengine.resources.translators.RpAuthnRequestTranslatorR
 import uk.gov.ida.hub.samlengine.resources.translators.RpAuthnResponseGeneratorResource;
 import uk.gov.ida.hub.samlengine.resources.translators.RpErrorResponseGeneratorResource;
 import uk.gov.ida.saml.core.IdaSamlBootstrap;
+import uk.gov.ida.saml.metadata.bundle.MetadataResolverBundle;
 import uk.gov.ida.shared.dropwizard.infinispan.util.InfinispanBundle;
 import uk.gov.ida.shared.dropwizard.infinispan.util.InfinispanCacheManager;
 
-import javax.inject.Provider;
 import javax.servlet.DispatcherType;
 import java.util.EnumSet;
 
@@ -42,6 +44,7 @@ import static com.hubspot.dropwizard.guicier.GuiceBundle.defaultBuilder;
 public class SamlEngineApplication extends Application<SamlEngineConfiguration> {
 
     private GuiceBundle<SamlEngineConfiguration> guiceBundle;
+    private MetadataResolverBundle<SamlEngineConfiguration> metadataResolverBundle;
 
     @Override
     public String getName() {
@@ -62,19 +65,38 @@ public class SamlEngineApplication extends Application<SamlEngineConfiguration> 
         bootstrap.addBundle(new MonitoringBundle());
         bootstrap.addBundle(new LoggingBundle());
         bootstrap.addBundle(new IdaJsonProcessingExceptionMapperBundle());
+
+        metadataResolverBundle = new MetadataResolverBundle<>(SamlEngineConfiguration::getMetadataConfiguration);
+        bootstrap.addBundle(metadataResolverBundle);
         final InfinispanBundle infinispanBundle = new InfinispanBundle();
         bootstrap.addBundle(infinispanBundle);
+
         guiceBundle = defaultBuilder(SamlEngineConfiguration.class)
-                .modules(new SamlEngineModule(), new CryptoModule(), bindInfinispan(infinispanBundle.getInfinispanCacheManagerProvider()))
+                .modules(bindVerifyMetadataResolver(metadataResolverBundle),
+                        new SamlEngineModule(),
+                        new CryptoModule(),
+                        bindInfinispan(infinispanBundle))
                 .build();
         bootstrap.addBundle(guiceBundle);
     }
 
-    protected Module bindInfinispan(Provider<InfinispanCacheManager> infinispanCacheManagerProvider) {
+    private Module bindVerifyMetadataResolver(MetadataResolverBundle<SamlEngineConfiguration> metadataResolverBundle) {
         return new AbstractModule() {
             @Override
             protected void configure() {
-                bind(InfinispanCacheManager.class).toProvider(infinispanCacheManagerProvider);
+                bind(MetadataResolver.class)
+                .annotatedWith(Names.named("VerifyMetadataResolver"))
+                .toProvider(metadataResolverBundle.getMetadataResolverProvider())
+                .asEagerSingleton();
+            }
+        };
+    }
+
+    protected Module bindInfinispan(InfinispanBundle infinispanBundle) {
+        return new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(InfinispanCacheManager.class).toProvider(infinispanBundle.getInfinispanCacheManagerProvider());
             }
         };
     }
