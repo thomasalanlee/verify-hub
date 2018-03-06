@@ -137,13 +137,6 @@ public class SamlProxyModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @Named("VerifyMetadataResolver")
-    public MetadataResolver getVerifyMetadataResolver(Environment environment, SamlProxyConfiguration configuration) {
-        return new DropwizardMetadataResolverFactory().createMetadataResolver(environment, configuration.getMetadataConfiguration());
-    }
-
-    @Provides
-    @Singleton
     @Named(VERIFY_METADATA_HEALTH_CHECK)
     public MetadataHealthCheck getVerifyMetadataHealthCheck(
         @Named("VerifyMetadataResolver") MetadataResolver metadataResolver,

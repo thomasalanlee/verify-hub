@@ -1,12 +1,16 @@
 package uk.gov.ida.hub.samlproxy;
 
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+import com.google.inject.name.Names;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.opensaml.saml.metadata.resolver.MetadataResolver;
 import uk.gov.ida.bundles.LoggingBundle;
 import uk.gov.ida.bundles.MonitoringBundle;
 import uk.gov.ida.bundles.ServiceStatusBundle;
@@ -20,6 +24,7 @@ import uk.gov.ida.hub.samlproxy.resources.HubMetadataResourceApi;
 import uk.gov.ida.hub.samlproxy.resources.SamlMessageReceiverApi;
 import uk.gov.ida.hub.samlproxy.resources.SamlMessageSenderApi;
 import uk.gov.ida.saml.core.IdaSamlBootstrap;
+import uk.gov.ida.saml.metadata.bundle.MetadataResolverBundle;
 
 import javax.servlet.DispatcherType;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -51,13 +56,33 @@ public class SamlProxyApplication extends Application<SamlProxyConfiguration> {
                 )
         );
 
+        MetadataResolverBundle<SamlProxyConfiguration> metadataResolverBundle =
+                new MetadataResolverBundle<>((SamlProxyConfiguration::getMetadataConfiguration));
+        bootstrap.addBundle(metadataResolverBundle);
+
         guiceBundle = defaultBuilder(SamlProxyConfiguration.class)
-                .modules(new SamlProxyModule(), new EventEmitterModule())
-                .build();
+                .modules(
+                        createMetadataResolverModule(metadataResolverBundle),
+                        new SamlProxyModule(),
+                        new EventEmitterModule()
+                ).build();
         bootstrap.addBundle(guiceBundle);
         bootstrap.addBundle(new ServiceStatusBundle());
         bootstrap.addBundle(new MonitoringBundle());
         bootstrap.addBundle(new LoggingBundle());
+    }
+
+    private Module createMetadataResolverModule(MetadataResolverBundle<SamlProxyConfiguration> metadataResolverBundle) {
+        return new AbstractModule() {
+
+            @Override
+            protected void configure() {
+                bind(MetadataResolver.class)
+                        .annotatedWith(Names.named("VerifyMetadataResolver"))
+                        .toProvider(metadataResolverBundle.getMetadataResolverProvider())
+                        .asEagerSingleton();
+            }
+        };
     }
 
     @Override
