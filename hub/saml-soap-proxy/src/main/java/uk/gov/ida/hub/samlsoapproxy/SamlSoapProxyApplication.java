@@ -1,12 +1,16 @@
 package uk.gov.ida.hub.samlsoapproxy;
 
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+import com.google.inject.name.Names;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.opensaml.saml.metadata.resolver.MetadataResolver;
 import uk.gov.ida.bundles.LoggingBundle;
 import uk.gov.ida.bundles.MonitoringBundle;
 import uk.gov.ida.bundles.ServiceStatusBundle;
@@ -17,6 +21,7 @@ import uk.gov.ida.hub.samlsoapproxy.resources.AttributeQueryRequestSenderResourc
 import uk.gov.ida.hub.samlsoapproxy.resources.MatchingServiceHealthCheckResource;
 import uk.gov.ida.hub.samlsoapproxy.resources.MatchingServiceVersionCheckResource;
 import uk.gov.ida.saml.core.IdaSamlBootstrap;
+import uk.gov.ida.saml.metadata.bundle.MetadataResolverBundle;
 
 import javax.servlet.DispatcherType;
 import java.util.EnumSet;
@@ -46,14 +51,30 @@ public class SamlSoapProxyApplication extends Application<SamlSoapProxyConfigura
                 )
         );
 
+        MetadataResolverBundle<SamlSoapProxyConfiguration> metadataResolverBundle =
+                new MetadataResolverBundle<>((SamlSoapProxyConfiguration::getMetadataConfiguration));
+        bootstrap.addBundle(metadataResolverBundle);
+
         bootstrap.addBundle(new IdaJsonProcessingExceptionMapperBundle());
         guiceBundle = defaultBuilder(SamlSoapProxyConfiguration.class)
-                .modules(new SamlSoapProxyModule(), new EventEmitterModule())
+                .modules(
+                        createMetadataResolverModule(metadataResolverBundle),
+                        new SamlSoapProxyModule(),
+                        new EventEmitterModule())
                 .build();
         bootstrap.addBundle(guiceBundle);
         bootstrap.addBundle(new ServiceStatusBundle());
         bootstrap.addBundle(new MonitoringBundle());
         bootstrap.addBundle(new LoggingBundle());
+    }
+
+    private AbstractModule createMetadataResolverModule(MetadataResolverBundle<SamlSoapProxyConfiguration> metadataResolverBundle) {
+        return new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(MetadataResolver.class).toProvider(metadataResolverBundle.getMetadataResolverProvider());
+            }
+        };
     }
 
     @Override

@@ -67,7 +67,6 @@ import uk.gov.ida.saml.metadata.ExpiredCertificateMetadataFilter;
 import uk.gov.ida.saml.metadata.HubMetadataPublicKeyStore;
 import uk.gov.ida.saml.metadata.MetadataHealthCheck;
 import uk.gov.ida.saml.metadata.MetadataRefreshTask;
-import uk.gov.ida.saml.metadata.MetadataResolverConfiguration;
 import uk.gov.ida.saml.metadata.factories.DropwizardMetadataResolverFactory;
 import uk.gov.ida.saml.security.CredentialFactorySignatureValidator;
 import uk.gov.ida.saml.security.PublicKeyFactory;
@@ -141,12 +140,6 @@ public class SamlSoapProxyModule extends AbstractModule {
     @Provides
     private Optional<Configuration> getEventEmitterConfiguration(final SamlSoapProxyConfiguration configuration) {
         return Optional.ofNullable(configuration.getEventEmitterConfiguration());
-    }
-
-    @Provides
-    @Singleton
-    public MetadataResolver getMetadataResolver(Environment environment, SamlSoapProxyConfiguration configuration) {
-        return new DropwizardMetadataResolverFactory().createMetadataResolver(environment, configuration.getMetadataConfiguration());
     }
 
     @Provides
@@ -299,11 +292,5 @@ public class SamlSoapProxyModule extends AbstractModule {
     @Provides @Singleton @MatchingServiceRequestExecutorBacklog
     public Counter matchingServiceRequestExecutorBacklogCounter(Environment environment) {
         return environment.metrics().counter("executor-backlog");
-    }
-
-    @Provides
-    @Singleton
-    public MetadataResolverConfiguration metadataConfiguration(SamlSoapProxyConfiguration samlSoapProxyConfiguration) {
-        return samlSoapProxyConfiguration.getMetadataConfiguration();
     }
 }
