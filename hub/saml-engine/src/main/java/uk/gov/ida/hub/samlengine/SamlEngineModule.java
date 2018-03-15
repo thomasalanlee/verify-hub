@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
+import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.setup.Environment;
 import org.joda.time.DateTime;
 import org.opensaml.saml.metadata.resolver.MetadataResolver;
@@ -102,6 +103,10 @@ import uk.gov.ida.saml.hub.transformers.outbound.SimpleProfileTransactionIdaStat
 import uk.gov.ida.saml.hub.transformers.outbound.providers.ResponseToUnsignedStringTransformer;
 import uk.gov.ida.saml.hub.transformers.outbound.providers.SimpleProfileOutboundResponseFromHubToResponseTransformerProvider;
 import uk.gov.ida.saml.hub.validators.authnrequest.AuthnRequestIdKey;
+import uk.gov.ida.saml.metadata.EidasMetadataConfiguration;
+import uk.gov.ida.saml.metadata.EidasMetadataResolverRepository;
+import uk.gov.ida.saml.metadata.EidasTrustAnchorHealthCheck;
+import uk.gov.ida.saml.metadata.EidasTrustAnchorResolver;
 import uk.gov.ida.saml.metadata.ExpiredCertificateMetadataFilter;
 import uk.gov.ida.saml.metadata.IdpMetadataPublicKeyStore;
 import uk.gov.ida.saml.metadata.MetadataHealthCheck;
@@ -133,10 +138,12 @@ import javax.inject.Singleton;
 import javax.ws.rs.client.Client;
 import java.net.URI;
 import java.security.KeyPair;
+import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Timer;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
@@ -185,46 +192,43 @@ public class SamlEngineModule extends AbstractModule {
         bind(CountrySingleSignOnServiceHelper.class);
         bind(IdaAuthnRequestTranslator.class);
         bind(EidasAuthnRequestTranslator.class);
+        bind(HubEidasAttributeQueryRequestBuilder.class);
+        //bind(factory.class);
         bind(MatchingServiceHealthcheckResponseTranslatorService.class);
     }
 
     @Provides
-    private HubEidasAttributeQueryRequestBuilder getHubEidasAttributeQueryRequestBuilder(@Named("HubEntityId") String  hubEntityId) {
-        return new HubEidasAttributeQueryRequestBuilder(hubEntityId);
-    }
-
-    @Provides
     private Function<HubEidasAttributeQueryRequest, Element> getEidasMatchingServiceRequestElementTransformer(
-        IdaKeyStore keyStore,
-        EncryptionKeyStore encryptionKeyStore,
-        EntityToEncryptForLocator entityToEncryptForLocator,
-        SignatureAlgorithm signatureAlgorithm,
-        DigestAlgorithm digestAlgorithm,
-        @Named("HubEidasEntityId") Optional<String> hubEidasEntityId
+            IdaKeyStore keyStore,
+            EncryptionKeyStore encryptionKeyStore,
+            EntityToEncryptForLocator entityToEncryptForLocator,
+            SignatureAlgorithm signatureAlgorithm,
+            DigestAlgorithm digestAlgorithm,
+            @Named("HubEidasEntityId") Optional<String> hubEidasEntityId
     ) {
         if (!hubEidasEntityId.isPresent()) {
             throw new InvalidConfigurationException(EIDAS_HUB_ENTITY_ID_NOT_CONFIGURED_ERROR_MESSAGE);
         }
         return hubTransformersFactory.getEidasMatchingServiceRequestToElementTransformer(
-            keyStore,
-            encryptionKeyStore,
-            entityToEncryptForLocator,
-            signatureAlgorithm,
-            digestAlgorithm,
-            hubEidasEntityId.get());
+                keyStore,
+                encryptionKeyStore,
+                entityToEncryptForLocator,
+                signatureAlgorithm,
+                digestAlgorithm,
+                hubEidasEntityId.get());
     }
 
     @Provides
     private AttributeQueryGenerator<HubEidasAttributeQueryRequest> getHubEidasAttributeQueryRequestAttributeQueryGenerator(
-        Function<HubEidasAttributeQueryRequest, Element> attributeQueryRequestTransformer,
-        AssignableEntityToEncryptForLocator entityToEncryptForLocator) {
+            Function<HubEidasAttributeQueryRequest, Element> attributeQueryRequestTransformer,
+            AssignableEntityToEncryptForLocator entityToEncryptForLocator) {
         return new AttributeQueryGenerator<>(attributeQueryRequestTransformer, entityToEncryptForLocator);
     }
 
     @Provides
     private CountryMatchingServiceRequestGeneratorService getCountryMatchingServiceRequestGeneratorService(
-        HubEidasAttributeQueryRequestBuilder eidasAttributeQueryRequestBuilder,
-        AttributeQueryGenerator<HubEidasAttributeQueryRequest> eidasAttributeQueryGenerator) {
+            HubEidasAttributeQueryRequestBuilder eidasAttributeQueryRequestBuilder,
+            AttributeQueryGenerator<HubEidasAttributeQueryRequest> eidasAttributeQueryGenerator) {
         return new CountryMatchingServiceRequestGeneratorService(eidasAttributeQueryRequestBuilder, eidasAttributeQueryGenerator);
     }
 
@@ -239,6 +243,11 @@ public class SamlEngineModule extends AbstractModule {
         return new CountryAuthnRequestGeneratorService(countrySingleSignOnServiceHelper, eidasRequestStringTransformer, eidasAuthnRequestTranslator, hubEidasEntityId.get());
     }
 
+    //We will need a factory containing the EidasMetadataResolverRepository, which will generate
+    //the multiple country signature validators
+    //The factory will be injected into the CountryAuthnResponseTranslatorService instead of the validators
+    //the factory will then have methods getResponseAssertionFromCountryValidator(String entityId) etc
+
     @Provides
     private CountryAuthnResponseTranslatorService getCountryAuthnResponseTranslatorService(StringToOpenSamlObjectTransformer<Response> stringToOpenSamlResponseTransformer,
                                                                                            ResponseFromCountryValidator responseFromCountryValidator,
@@ -247,8 +256,9 @@ public class SamlEngineModule extends AbstractModule {
                                                                                            Optional<DestinationValidator> validateSamlResponseIssuedByIdpDestination,
                                                                                            @Named("AES256DecrypterWithGCM") AssertionDecrypter assertionDecrypter,
                                                                                            AssertionBlobEncrypter assertionBlobEncrypter,
-                                                                                           @Named("CountrySamlResponseSignatureValidator") Optional<SamlResponseSignatureValidator> responseSignatureValidator,
-                                                                                           @Named("CountrySamlAssertionsSignatureValidator") Optional<SamlAssertionsSignatureValidator> assertionSignatureValidator,
+                                                                                           @Named("CountrySamlResponseSignatureValidator") Optional<SamlResponseSignatureValidator> responseSignatureValidator, // kill?
+                                                                                           @Named("CountrySamlAssertionsSignatureValidator") Optional<SamlAssertionsSignatureValidator> assertionSignatureValidator, //kill?
+                                                                                           // validator factory
                                                                                            PassthroughAssertionUnmarshaller passthroughAssertionUnmarshaller) {
         if (!responseAssertionFromCountryValidator.isPresent() || !validateSamlResponseIssuedByIdpDestination.isPresent() || !responseSignatureValidator.isPresent() || !assertionSignatureValidator.isPresent()) {
             throw new InvalidConfigurationException("Eidas not configured correctly");
@@ -256,6 +266,7 @@ public class SamlEngineModule extends AbstractModule {
         return new CountryAuthnResponseTranslatorService(stringToOpenSamlResponseTransformer,
                 responseFromCountryValidator,
                 idpIdaStatusUnmarshaller,
+                // validator factory
                 responseAssertionFromCountryValidator.get(),
                 validateSamlResponseIssuedByIdpDestination.get(),
                 assertionDecrypter,
@@ -291,9 +302,9 @@ public class SamlEngineModule extends AbstractModule {
     @Singleton
     @Named(VERIFY_METADATA_HEALTH_CHECK)
     private MetadataHealthCheck getVerifyMetadataHealthCheck(
-        @Named("VerifyMetadataResolver") MetadataResolver metadataResolver,
-        Environment environment,
-        SamlEngineConfiguration configuration) {
+            @Named("VerifyMetadataResolver") MetadataResolver metadataResolver,
+            Environment environment,
+            SamlEngineConfiguration configuration) {
         MetadataHealthCheck metadataHealthCheck = new MetadataHealthCheck(metadataResolver, configuration.getMetadataConfiguration().getExpectedEntityId());
         environment.healthChecks().register(VERIFY_METADATA_HEALTH_CHECK, metadataHealthCheck);
         return metadataHealthCheck;
@@ -320,24 +331,42 @@ public class SamlEngineModule extends AbstractModule {
 
     @Provides
     @Singleton
-    @Named("CountryMetadataResolver")
-    private Optional<MetadataResolver> getCountryMetadataResolver(Environment environment, SamlEngineConfiguration configuration) {
-        return configuration.getCountryConfiguration().map(config -> new DropwizardMetadataResolverFactory().createMetadataResolver(environment, config.getMetadataConfiguration()));
+    private Optional<EidasMetadataResolverRepository> getCountryMetadataResolverRepository(Environment environment, SamlEngineConfiguration configuration) {
+        if (configuration.isEidasEnabled()) {
+
+            EidasMetadataConfiguration metadataConfiguration = configuration.getCountryConfiguration().get().getMetadataConfiguration();
+            URI trustAnchorUri = metadataConfiguration.getTrustAnchorUri();
+            Client client = new JerseyClientBuilder(environment)
+                    .using(metadataConfiguration.getJerseyClientConfiguration())
+                    .build(metadataConfiguration.getJerseyClientName());
+            KeyStore trustStore = metadataConfiguration.getTrustStoreConfiguration().getTrustStore();
+
+            EidasTrustAnchorResolver trustAnchorResolver = new EidasTrustAnchorResolver(
+                    trustAnchorUri,
+                    client,
+                    trustStore);
+
+            return Optional.of(new EidasMetadataResolverRepository(
+                    trustAnchorResolver,
+                    environment,
+                    metadataConfiguration,
+                    new DropwizardMetadataResolverFactory(),
+                    new Timer()));
+        }
+        return Optional.empty();
     }
 
     @Provides
     @Singleton
-    @Named(COUNTRY_METADATA_HEALTH_CHECK)
-    public Optional<MetadataHealthCheck> getCountryMetadataHealthCheck(
-        @Named("CountryMetadataResolver") Optional<MetadataResolver> metadataResolver,
-        Environment environment,
-        SamlEngineConfiguration configuration) {
-        Optional<MetadataHealthCheck> metadataHealthCheck = metadataResolver.map(resolver -> new MetadataHealthCheck(resolver, configuration.getCountryConfiguration().get().getMetadataConfiguration().getExpectedEntityId()));
+    public Optional<EidasTrustAnchorHealthCheck> getCountryMetadataHealthCheck(
+            Optional<EidasMetadataResolverRepository> metadataResolverRepository,
+            Environment environment) {
+        Optional<EidasTrustAnchorHealthCheck> metadataHealthCheck = metadataResolverRepository
+                .map(repository -> new EidasTrustAnchorHealthCheck(repository));
 
-        return metadataHealthCheck.map(healthCheck -> {
-            environment.healthChecks().register(COUNTRY_METADATA_HEALTH_CHECK, healthCheck);
-            return healthCheck;
-        });
+        metadataHealthCheck.ifPresent(healthCheck -> environment.healthChecks().register(COUNTRY_METADATA_HEALTH_CHECK, healthCheck));
+
+        return metadataHealthCheck;
     }
 
     @Provides
@@ -581,10 +610,20 @@ public class SamlEngineModule extends AbstractModule {
         );
     }
 
+    //kill these 3? to be replaced by the validator factory
     @Provides
     @Singleton
     @Named("CountrySamlMessageSignatureValidator")
     private Optional<SamlMessageSignatureValidator> getCountrySamlMessageSignatureValidator(@Named("countryAuthnResponseKeyStore") Optional<SigningKeyStore> countrySigningKeyStore) {
+
+        //factory method would look like:
+//        return new SamlMessageSignatureValidator(
+//                new CredentialFactorySignatureValidator(
+//                        new SigningCredentialFactory(
+//                                new AuthnResponseKeyStore(
+//                                        new IdpMetadataPublicKeyStore(metadataResolverRepository.get(entityId))))))
+
+
         return countrySigningKeyStore.map(store -> new SamlMessageSignatureValidator(new CredentialFactorySignatureValidator(new SigningCredentialFactory(store))));
     }
 

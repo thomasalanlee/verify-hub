@@ -85,13 +85,16 @@ public class SamlEngineAppRule extends DropwizardAppRule<SamlEngineConfiguration
 
         if (isCountryEnabled) {
             List<ConfigOverride> countryOverrides = Stream.of(
-                    config("eidas", "true"),
                     config("country.metadata.uri", "http://localhost:" + countryMetadataServer.getPort() + COUNTRY_METADATA_PATH),
-                    config("country.metadata.trustStorePath", metadataTrustStore.getAbsolutePath()),
-                    config("country.metadata.trustStorePassword", metadataTrustStore.getPassword()),
+                    config("country.metadata.trustAnchorUri", ""),
                     config("country.metadata.minRefreshDelay", "60000"),
-                    config("country.metadata.maxRefreshDelay", "600000"),
-                    config("country.metadata.expectedEntityId", EIDAS_ENTITY_ID),
+                    config("country.metadata.maxRefreshDelay", "3600000"),
+                    config("country.metadata.trustAnchorMaxRefreshDelay", "60000"),
+                    config("country.metadata.client", ""),
+                    config("country.metadata.jerseyClientName", "country-metadata-client"),
+                    config("country.metadata.trustStore.path", ""), // add to config
+                    config("country.metadata.trustStore.password", ""), // add to config
+                    config("country.metadata.metadataBaseUri", ""),
                     config("country.metadata.jerseyClientName", "country-metadata-client"),
                     config("country.metadata.client.timeout", "2s"),
                     config("country.metadata.client.timeToLive", "10m"),

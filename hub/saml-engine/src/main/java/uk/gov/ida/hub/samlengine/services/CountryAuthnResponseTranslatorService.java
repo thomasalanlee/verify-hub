@@ -78,10 +78,12 @@ public class CountryAuthnResponseTranslatorService {
     private ValidatedResponse validateResponse(Response response) {
         responseFromCountryValidator.validate(response);
         responseFromCountryDestinationValidator.validate(response.getDestination());
+        //responseSignatureValidator = factory.get...(response.getIssuer().getValue())
         return responseSignatureValidator.validate(response, IDPSSODescriptor.DEFAULT_ELEMENT_NAME);
     }
 
     private Assertion validateAssertion(ValidatedResponse validatedResponse, List<Assertion> decryptedAssertions) {
+        //assertionSignatureValidator = factory.get...(response.getIssuer().getValue())
         assertionSignatureValidator.validate(decryptedAssertions, IDPSSODescriptor.DEFAULT_ELEMENT_NAME);
         Assertion identityAssertion = decryptedAssertions.get(0);
         responseAssertionFromCountryValidator.validate(validatedResponse, identityAssertion);

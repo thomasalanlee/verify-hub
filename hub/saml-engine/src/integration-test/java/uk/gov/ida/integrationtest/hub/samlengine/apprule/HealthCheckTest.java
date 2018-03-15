@@ -8,7 +8,6 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import uk.gov.ida.integrationtest.hub.samlengine.apprule.support.ConfigStubRule;
-import uk.gov.ida.integrationtest.hub.samlengine.apprule.support.MetadataRule;
 import uk.gov.ida.integrationtest.hub.samlengine.apprule.support.SamlEngineAppRule;
 
 import javax.ws.rs.client.Client;

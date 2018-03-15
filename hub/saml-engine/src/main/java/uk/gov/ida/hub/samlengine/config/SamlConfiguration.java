@@ -15,10 +15,6 @@ public class SamlConfiguration {
 
     @Valid
     @JsonProperty
-    protected String eidasEntityId;
-
-    @Valid
-    @JsonProperty
     protected URI expectedDestination;
 
     public String getEntityId() {
@@ -28,6 +24,4 @@ public class SamlConfiguration {
     public URI getExpectedDestinationHost() {
         return expectedDestination;
     }
-
-    public String getEidasEntityId() { return eidasEntityId; }
 }
