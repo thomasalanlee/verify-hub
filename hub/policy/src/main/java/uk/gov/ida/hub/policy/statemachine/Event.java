@@ -20,7 +20,6 @@ public enum Event {
     Transition_To_Eidas_Cycle0_And1_Match_Request_Sent_State,
     Try_Another_Idp_Selected,
     User_Account_Created_Response_From_Matching_Service,
-    User_Account_Creationb_Failed_Response_From_Matching_Service,
     User_Account_Creation_Failed_Response_From_Matching_Service
 
 }

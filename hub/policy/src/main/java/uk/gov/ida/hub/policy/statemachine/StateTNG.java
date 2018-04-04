@@ -22,5 +22,5 @@ public enum StateTNG {
     User_Account_Ceation_Request_Sent,
     User_Account_Created,
     User_Account_Creation_Failed,
-    User_Account_Creation_Request_Sent
+    NULL, Idp_Registering, User_Account_Creation_Request_Sent
 }
