@@ -5,6 +5,7 @@ import org.joda.time.DateTime;
 import uk.gov.ida.hub.policy.domain.LevelOfAssurance;
 import uk.gov.ida.hub.policy.domain.PersistentId;
 import uk.gov.ida.hub.policy.domain.SessionId;
+import uk.gov.ida.hub.policy.statemachine.StateTNG;
 
 import java.io.Serializable;
 import java.net.URI;
@@ -60,5 +61,10 @@ public class AwaitingCycle3DataState extends AbstractAwaitingCycle3DataState imp
 
     public boolean isRegistering() {
         return registering;
+    }
+
+    @Override
+    public StateTNG getThisState(){
+        return StateTNG.Awaiting_Cycle3_Data;
     }
 }

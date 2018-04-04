@@ -17,6 +17,7 @@ import uk.gov.ida.hub.policy.domain.state.SessionStartedState;
 import uk.gov.ida.hub.policy.domain.state.TimeoutState;
 import uk.gov.ida.hub.policy.exception.InvalidSessionStateException;
 import uk.gov.ida.hub.policy.exception.SessionTimeoutException;
+import uk.gov.ida.hub.policy.statemachine.Session;
 import uk.gov.ida.shared.utils.datetime.DateTimeFreezer;
 
 import java.net.URI;
@@ -36,6 +37,7 @@ public class SessionRepositoryTest {
 
     private SessionRepository sessionRepository;
     private ConcurrentMap<SessionId, State> dataStore;
+    private ConcurrentMap<SessionId, Session> sessionStore;
     private ConcurrentMap<SessionId, DateTime> sessionStartedMap;
     private DateTime defaultSessionExpiry = DateTime.now().plusDays(8);
 
@@ -51,17 +53,31 @@ public class SessionRepositoryTest {
     @Before
     public void setup() {
         dataStore = new ConcurrentHashMap<>();
+        sessionStore = new ConcurrentHashMap<>();
         sessionStartedMap = new ConcurrentHashMap<>();
-        sessionRepository = new SessionRepository(dataStore, sessionStartedMap, controllerFactory);
+        sessionRepository = new SessionRepository(dataStore, sessionStore, sessionStartedMap, controllerFactory);
     }
 
     @Test(expected = InvalidSessionStateException.class)
     public void shouldThrowExceptionIfStateIsNotWhatIsExpected() {
         SessionId expectedSessionId = aSessionId().build();
         SessionStartedState sessionStartedState = aSessionStartedState().withSessionExpiryTimestamp(defaultSessionExpiry).withSessionId(expectedSessionId).build();
-        SessionId sessionId = sessionRepository.createSession(sessionStartedState);
+        Session session = aSessionFromSessionStartedState(sessionStartedState);
+        SessionId sessionId = sessionRepository.createSession(sessionStartedState, session);
 
         sessionRepository.getStateController(sessionId, IdpSelectedState.class);
+    }
+
+    private Session aSessionFromSessionStartedState(SessionStartedState sessionStartedState) {
+        Session session = new Session();
+        session.setSessionId(sessionStartedState.getSessionId());
+        session.setRequestId(sessionStartedState.getRequestId());
+        session.setRequestIssuerEntityId(samlResponse.getIssuer());
+        session.setSessionExpiryTimestamp(sessionExpiryTimestamp);
+        session.setLevelsOfAssurance(transactionLevelsOfAssurance);
+
+
+        return null;
     }
 
     @Test

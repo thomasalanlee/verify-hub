@@ -3,10 +3,12 @@ package uk.gov.ida.hub.policy.resources;
 import com.codahale.metrics.annotation.Timed;
 import uk.gov.ida.hub.policy.Urls;
 import uk.gov.ida.hub.policy.controllogic.AuthnRequestFromTransactionHandler;
+import uk.gov.ida.hub.policy.controllogic.IdpSelectedEventHandler;
 import uk.gov.ida.hub.policy.domain.AuthnRequestSignInDetailsDto;
 import uk.gov.ida.hub.policy.domain.AuthnRequestSignInProcess;
 import uk.gov.ida.hub.policy.domain.IdpSelected;
 import uk.gov.ida.hub.policy.domain.SessionId;
+import uk.gov.ida.hub.policy.logging.HubEventLogger;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -24,11 +26,13 @@ import static uk.gov.ida.hub.policy.Urls.SharedUrls.SESSION_ID_PARAM;
 @Produces(MediaType.APPLICATION_JSON)
 public class AuthnRequestFromTransactionResource {
     private final AuthnRequestFromTransactionHandler authnRequestFromTransactionHandler;
+    private IdpSelectedEventHandler idpSelectedEventHandler;
 
     @Inject
     public AuthnRequestFromTransactionResource(
-            AuthnRequestFromTransactionHandler authnRequestFromTransactionHandler) {
+            AuthnRequestFromTransactionHandler authnRequestFromTransactionHandler, IdpSelectedEventHandler idpSelectedEventHandler) {
         this.authnRequestFromTransactionHandler = authnRequestFromTransactionHandler;
+        this.idpSelectedEventHandler = idpSelectedEventHandler;
     }
 
     @POST
@@ -37,7 +41,13 @@ public class AuthnRequestFromTransactionResource {
     public Response selectIdentityProvider(
             @PathParam(SESSION_ID_PARAM) SessionId sessionIdParameter, @Valid IdpSelected idpSelected) {
 
-        authnRequestFromTransactionHandler.selectIdpForGivenSessionId(sessionIdParameter, idpSelected);
+        if (idpSelected.isRegistration()){
+            idpSelectedEventHandler.register(sessionIdParameter.getSessionId());
+        }else{
+            idpSelectedEventHandler.signin(sessionIdParameter.getSessionId());
+        }
+
+        //authnRequestFromTransactionHandler.selectIdpForGivenSessionId(sessionIdParameter, idpSelected);
 
         return Response.status(Response.Status.CREATED).build();
     }

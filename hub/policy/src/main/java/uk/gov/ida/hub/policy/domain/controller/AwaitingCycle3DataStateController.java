@@ -15,6 +15,9 @@ import uk.gov.ida.hub.policy.domain.state.Cycle3MatchRequestSentState;
 import uk.gov.ida.hub.policy.logging.HubEventLogger;
 import uk.gov.ida.hub.policy.proxy.MatchingServiceConfigProxy;
 import uk.gov.ida.hub.policy.proxy.TransactionsConfigProxy;
+import uk.gov.ida.hub.policy.statemachine.Event;
+import uk.gov.ida.hub.policy.statemachine.StateMachine;
+import uk.gov.ida.hub.policy.statemachine.StateTNG;
 
 import java.net.URI;
 
@@ -92,5 +95,9 @@ public class AwaitingCycle3DataStateController extends AbstractAwaitingCycle3Dat
         );
 
         getStateTransitionAction().transitionTo(cycle3MatchRequestSentState);
+
+        StateTNG newstate = StateMachine.transition(getState().getThisState(), Event.Cycle3_Data_Submitted);
+        assert (newstate == cycle3MatchRequestSentState.getThisState());
+
     }
 }

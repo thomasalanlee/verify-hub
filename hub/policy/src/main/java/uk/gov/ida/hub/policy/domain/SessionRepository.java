@@ -17,6 +17,7 @@ import uk.gov.ida.hub.policy.domain.state.TimeoutState;
 import uk.gov.ida.hub.policy.domain.state.UserAccountCreatedState;
 import uk.gov.ida.hub.policy.exception.InvalidSessionStateException;
 import uk.gov.ida.hub.policy.exception.SessionTimeoutException;
+import uk.gov.ida.hub.policy.statemachine.Session;
 
 import javax.inject.Inject;
 import java.util.concurrent.ConcurrentMap;
@@ -28,28 +29,40 @@ public class SessionRepository {
     private static final Logger LOG = LoggerFactory.getLogger(SessionRepository.class);
 
     private final ConcurrentMap<SessionId, State> dataStore;
+    private final ConcurrentMap<SessionId, Session> sessionStore;
     private final ConcurrentMap<SessionId, DateTime> sessionStartedMap;
     private final StateControllerFactory controllerFactory;
 
     @Inject
     public SessionRepository(
             ConcurrentMap<SessionId, State> dataStore,
+            ConcurrentMap<SessionId, Session> sessionStore,
             ConcurrentMap<SessionId, DateTime> sessionStartedMap,
             StateControllerFactory controllerFactory) {
 
         this.dataStore = dataStore;
+        this.sessionStore = sessionStore;
         this.sessionStartedMap = sessionStartedMap;
         this.controllerFactory = controllerFactory;
     }
 
-    public SessionId createSession(SessionStartedState startedState) {
+    public SessionId createSession(SessionStartedState startedState, Session session) {
         SessionId sessionId = startedState.getSessionId();
 
         dataStore.put(sessionId, startedState);
+        sessionStore.put(sessionId, session);
         sessionStartedMap.put(sessionId, startedState.getSessionExpiryTimestamp());
         LOG.info(format("Session {0} created", sessionId.getSessionId()));
 
         return sessionId;
+    }
+
+    public Session getSession(SessionId sessionId){
+        return sessionStore.get(sessionId);
+    }
+
+    public void updateSession(Session session){
+        sessionStore.replace(session.getSessionId(), session);
     }
 
     @Timed(name = Urls.SESSION_REPO_TIMED_GROUP)

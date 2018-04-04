@@ -18,6 +18,7 @@ import uk.gov.ida.hub.policy.domain.PersistentId;
 import uk.gov.ida.hub.policy.domain.SessionId;
 import uk.gov.ida.hub.policy.domain.state.CountrySelectedState;
 import uk.gov.ida.hub.policy.domain.state.IdpSelectedState;
+import uk.gov.ida.hub.policy.statemachine.Session;
 
 import javax.inject.Inject;
 import java.text.MessageFormat;
@@ -225,6 +226,15 @@ public class HubEventLogger {
         logSessionEvent(sessionId, transactionEntityId, sessionExpiryTimestamp, requestId, USER_ACCOUNT_CREATION_REQUEST_SENT, new HashMap<>());
     }
 
+    public void logIdpSelectedEvent(Session session) {
+        List<LevelOfAssurance> levelsOfAssurance = session.getLevelsOfAssurance();
+        Map<EventDetailsKey, String> details = new HashMap<>();
+        details.put(idp_entity_id, session.getIdpEntityId());
+        //details.put(principal_ip_address_as_seen_by_hub, principalIpAddress);
+        details.put(minimum_level_of_assurance, levelsOfAssurance.get(0).name());
+        details.put(required_level_of_assurance, levelsOfAssurance.get(levelsOfAssurance.size() - 1).name());
+        logSessionEvent(session.getFullSessionId(), session.getRequestIssuerEntityId(), session.getSessionExpiryTimestamp(), session.getRequestId(), IDP_SELECTED, details);
+    }
 
     public void logIdpSelectedEvent(IdpSelectedState idpSelectedState, String principalIpAddress) {
         List<LevelOfAssurance> levelsOfAssurance = idpSelectedState.getLevelsOfAssurance();
@@ -298,4 +308,7 @@ public class HubEventLogger {
         eventSinkProxy.logHubEvent(eventSinkHubEvent);
         eventEmitter.record(eventSinkHubEvent);
     }
+
+
+
 }

@@ -26,6 +26,7 @@ import uk.gov.ida.hub.policy.domain.state.ResponsePreparedState;
 import uk.gov.ida.hub.policy.domain.state.SessionStartedState;
 import uk.gov.ida.hub.policy.logging.HubEventLogger;
 import uk.gov.ida.hub.policy.proxy.TransactionsConfigProxy;
+import uk.gov.ida.hub.policy.statemachine.Session;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -64,11 +65,20 @@ public class AuthnRequestFromTransactionHandler {
                 sessionExpiryTimestamp,
                 sessionId,
                 transactionSupportsEidas);
+
+
         final List<LevelOfAssurance> transactionLevelsOfAssurance = transactionsConfigProxy.getLevelsOfAssurance(samlResponse.getIssuer());
+
+        Session session = new Session();
+        session.setSessionId(sessionId);
+        session.setRequestId(samlResponse.getId());
+        session.setRequestIssuerEntityId(samlResponse.getIssuer());
+        session.setSessionExpiryTimestamp(sessionExpiryTimestamp);
+        session.setLevelsOfAssurance(transactionLevelsOfAssurance);
 
         hubEventLogger.logSessionStartedEvent(samlResponse, ipAddress, sessionExpiryTimestamp, sessionId, transactionLevelsOfAssurance.get(0), transactionLevelsOfAssurance.get(transactionLevelsOfAssurance.size() -1));
 
-        return sessionRepository.createSession(sessionStartedState);
+        return sessionRepository.createSession(sessionStartedState, session);
     }
 
     public void tryAnotherIdp(final SessionId sessionId) {

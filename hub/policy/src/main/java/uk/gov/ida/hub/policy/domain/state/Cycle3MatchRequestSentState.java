@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import uk.gov.ida.hub.policy.domain.LevelOfAssurance;
 import uk.gov.ida.hub.policy.domain.PersistentId;
 import uk.gov.ida.hub.policy.domain.SessionId;
+import uk.gov.ida.hub.policy.statemachine.StateTNG;
 
 import java.io.Serializable;
 import java.net.URI;
@@ -44,5 +45,10 @@ public class Cycle3MatchRequestSentState extends Cycle0And1MatchRequestSentState
                 authnStatementAssertion,
                 persistentId
         );
+    }
+
+    @Override
+    public StateTNG getThisState(){
+        return StateTNG.Cycle3_Match_Request_Sent;
     }
 }
