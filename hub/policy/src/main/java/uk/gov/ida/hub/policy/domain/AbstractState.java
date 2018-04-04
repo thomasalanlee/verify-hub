@@ -63,4 +63,7 @@ public abstract class AbstractState implements State, Serializable, ErrorRespons
     public boolean getTransactionSupportsEidas() {
         return transactionSupportsEidas;
     }
+
+
+
 }

@@ -16,6 +16,7 @@ import uk.gov.ida.hub.policy.annotations.Config;
 import uk.gov.ida.hub.policy.annotations.SamlEngine;
 import uk.gov.ida.hub.policy.annotations.SamlSoapProxy;
 import uk.gov.ida.hub.policy.controllogic.AuthnRequestFromTransactionHandler;
+import uk.gov.ida.hub.policy.controllogic.IdpSelectedEventHandler;
 import uk.gov.ida.hub.policy.controllogic.ResponseFromIdpHandler;
 import uk.gov.ida.hub.policy.domain.AssertionRestrictionsFactory;
 import uk.gov.ida.hub.policy.domain.ResponseFromHubFactory;
@@ -90,6 +91,7 @@ public class PolicyModule extends AbstractModule {
         bind(Cycle3Service.class);
         bind(MatchingServiceResponseService.class);
         bind(ResponseFromIdpHandler.class);
+        bind(IdpSelectedEventHandler.class);
     }
 
     @Provides
