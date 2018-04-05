@@ -3,11 +3,11 @@ package uk.gov.ida.hub.policy.statemachine;
 public enum Event {
 
     Authentication_Failed_Response_From_Idp,
-    Cancellation_Recieved,
+    Cancellation_Received,
     Country_Selected,
     Cycle3_Data_Submitted,
     Fraud_Response_From_Idp,
-    Idp_Registering,
+    Idp_Selected_For_Registration,
     Idp_Selected,
     Match_Response_From_Matching_Service,
     No_Authentication_Context_Response_From_Idp,

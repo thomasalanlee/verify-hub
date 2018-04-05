@@ -16,11 +16,13 @@ public enum StateTNG {
     Matching_Service_Request_Error,
     No_Match,
     Paused_Registration,
+    Registering_With_Idp,
     Requester_Error,
     Session_Started,
     Successful_Match,
     User_Account_Ceation_Request_Sent,
     User_Account_Created,
     User_Account_Creation_Failed,
-    NULL, Idp_Registering, User_Account_Creation_Request_Sent
+    User_Account_Creation_Request_Sent,
+    NULL
 }
