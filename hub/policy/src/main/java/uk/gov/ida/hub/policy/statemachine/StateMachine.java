@@ -1,7 +1,5 @@
 package uk.gov.ida.hub.policy.statemachine;
 
-import uk.gov.ida.hub.policy.statemachine.StateTNG;
-
 public class StateMachine {
 
 
@@ -17,7 +15,7 @@ public class StateMachine {
 
             case Awaiting_Cycle3_Data:
                 switch(event){
-                    case Cancellation_Recieved: return StateTNG.Cycle3_Data_Input_Cancelled;
+                    case Cancellation_Received: return StateTNG.Cycle3_Data_Input_Cancelled;
                     case Cycle3_Data_Submitted: return StateTNG.Cycle3_Match_Request_Sent;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
@@ -50,7 +48,7 @@ public class StateMachine {
             case Cycle3_Match_Request_Sent:
                 switch(event){
                     case Response_Processing_Details_Received: return StateTNG.Matching_Service_Request_Error;
-                    case Cancellation_Recieved: return StateTNG.Cycle3_Data_Input_Cancelled;
+                    case Cancellation_Received: return StateTNG.Cycle3_Data_Input_Cancelled;
                     case Request_Failure: return StateTNG.Matching_Service_Request_Error;
                     case User_Account_Created_Response_From_Matching_Service: return StateTNG.NULL;
                     case User_Account_Creation_Failed_Response_From_Matching_Service: return StateTNG.NULL;
@@ -129,7 +127,7 @@ public class StateMachine {
             case Session_Started:
                 switch(event){
                     case Idp_Selected: return StateTNG.Idp_Selected;
-                    case Idp_Registering: return StateTNG.Idp_Registering;
+                    case Idp_Selected_For_Registration: return StateTNG.Registering_With_Idp;
                     case Country_Selected: return StateTNG.Country_Selected;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }

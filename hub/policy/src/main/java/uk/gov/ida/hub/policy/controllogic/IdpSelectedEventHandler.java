@@ -18,7 +18,7 @@ public class IdpSelectedEventHandler {
     }
 
     public void register(SessionId sessionId) {
-        Event event =Event.Idp_Registering;
+        Event event =Event.Idp_Selected_For_Registration;
         Session session = sessionRepository.getSession(sessionId);
         StateTNG currentState = session.getCurrentState();
         StateTNG newState = StateMachine.transition(currentState, event);
