@@ -33,6 +33,7 @@ import uk.gov.ida.hub.policy.resources.MatchingServiceFailureResponseResource;
 import uk.gov.ida.hub.policy.resources.MatchingServiceResponseResource;
 import uk.gov.ida.hub.policy.resources.ResponseFromIdpResource;
 import uk.gov.ida.hub.policy.resources.SessionResource;
+import uk.gov.ida.hub.policy.statemachine.InvalidStateExceptionMapper;
 import uk.gov.ida.shared.dropwizard.infinispan.util.InfinispanBundle;
 import uk.gov.ida.shared.dropwizard.infinispan.util.InfinispanCacheManager;
 
@@ -96,6 +97,7 @@ public class PolicyApplication extends Application<PolicyConfiguration> {
         environment.jersey().register(SessionCreationFailureExceptionMapper.class);
         environment.jersey().register(EidasCountryNotSupportedExceptionMapper.class);
         environment.jersey().register(EidasNotSupportedExceptionMapper.class);
+        environment.jersey().register(InvalidStateExceptionMapper.class);
     }
 
     protected void registerResources(PolicyConfiguration configuration, Environment environment) {

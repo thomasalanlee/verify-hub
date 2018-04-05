@@ -18,6 +18,7 @@ import uk.gov.ida.hub.policy.domain.state.TimeoutState;
 import uk.gov.ida.hub.policy.exception.InvalidSessionStateException;
 import uk.gov.ida.hub.policy.exception.SessionTimeoutException;
 import uk.gov.ida.hub.policy.statemachine.Session;
+import uk.gov.ida.hub.policy.statemachine.StateTNG;
 import uk.gov.ida.shared.utils.datetime.DateTimeFreezer;
 
 import java.net.URI;
@@ -70,12 +71,13 @@ public class SessionRepositoryTest {
 
     private Session aSessionFromSessionStartedState(SessionStartedState state) {
         Session session = new Session();
+        session.setCurrentState(StateTNG.Session_Started);
         session.setSessionId(state.getSessionId());
         session.setRequestId(state.getRequestId());
         session.setRequestIssuerEntityId(state.getRequestIssuerEntityId());
         session.setSessionExpiryTimestamp(state.getSessionExpiryTimestamp());
 
-        return null;
+        return session;
     }
 
     @Test

@@ -16,7 +16,7 @@ import uk.gov.ida.hub.policy.annotations.Config;
 import uk.gov.ida.hub.policy.annotations.SamlEngine;
 import uk.gov.ida.hub.policy.annotations.SamlSoapProxy;
 import uk.gov.ida.hub.policy.controllogic.AuthnRequestFromTransactionHandler;
-import uk.gov.ida.hub.policy.controllogic.IdpSelectedEventHandler;
+import uk.gov.ida.hub.policy.eventhandler.IdpSelectedEventHandler;
 import uk.gov.ida.hub.policy.controllogic.ResponseFromIdpHandler;
 import uk.gov.ida.hub.policy.domain.AssertionRestrictionsFactory;
 import uk.gov.ida.hub.policy.domain.ResponseFromHubFactory;
@@ -38,6 +38,7 @@ import uk.gov.ida.hub.policy.services.CountriesService;
 import uk.gov.ida.hub.policy.services.Cycle3Service;
 import uk.gov.ida.hub.policy.services.MatchingServiceResponseService;
 import uk.gov.ida.hub.policy.services.SessionService;
+import uk.gov.ida.hub.policy.statemachine.Session;
 import uk.gov.ida.jerseyclient.DefaultClientProvider;
 import uk.gov.ida.jerseyclient.ErrorHandlingClient;
 import uk.gov.ida.jerseyclient.JsonClient;
@@ -91,7 +92,6 @@ public class PolicyModule extends AbstractModule {
         bind(Cycle3Service.class);
         bind(MatchingServiceResponseService.class);
         bind(ResponseFromIdpHandler.class);
-        bind(IdpSelectedEventHandler.class);
     }
 
     @Provides
@@ -126,8 +126,14 @@ public class PolicyModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public ConcurrentMap<SessionId, State> sessionCache(InfinispanCacheManager infinispanCacheManager) {
+    public ConcurrentMap<SessionId, State> stateCache(InfinispanCacheManager infinispanCacheManager) {
         return infinispanCacheManager.getCache("state_cache");
+    }
+
+    @Provides
+    @Singleton
+    public ConcurrentMap<SessionId, Session> sessionCache(InfinispanCacheManager infinispanCacheManager) {
+        return infinispanCacheManager.getCache("session_cache");
     }
 
     @Provides
