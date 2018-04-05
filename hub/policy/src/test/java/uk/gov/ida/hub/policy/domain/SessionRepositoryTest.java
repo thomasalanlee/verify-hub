@@ -68,14 +68,12 @@ public class SessionRepositoryTest {
         sessionRepository.getStateController(sessionId, IdpSelectedState.class);
     }
 
-    private Session aSessionFromSessionStartedState(SessionStartedState sessionStartedState) {
+    private Session aSessionFromSessionStartedState(SessionStartedState state) {
         Session session = new Session();
-        session.setSessionId(sessionStartedState.getSessionId());
-        session.setRequestId(sessionStartedState.getRequestId());
-        session.setRequestIssuerEntityId(samlResponse.getIssuer());
-        session.setSessionExpiryTimestamp(sessionExpiryTimestamp);
-        session.setLevelsOfAssurance(transactionLevelsOfAssurance);
-
+        session.setSessionId(state.getSessionId());
+        session.setRequestId(state.getRequestId());
+        session.setRequestIssuerEntityId(state.getRequestIssuerEntityId());
+        session.setSessionExpiryTimestamp(state.getSessionExpiryTimestamp());
 
         return null;
     }
@@ -84,7 +82,7 @@ public class SessionRepositoryTest {
     public void createSession_shouldCreateAndStoreSession() {
         SessionId expectedSessionId = aSessionId().build();
         SessionStartedState sessionStartedState = aSessionStartedState().withSessionExpiryTimestamp(defaultSessionExpiry).withSessionId(expectedSessionId).build();
-        SessionId sessionId = sessionRepository.createSession(sessionStartedState);
+        SessionId sessionId = sessionRepository.createSession(sessionStartedState, aSessionFromSessionStartedState(sessionStartedState));
         sessionRepository.getStateController(sessionId, SessionStartedState.class);
 
         assertThat(sessionId).isEqualTo(expectedSessionId);
@@ -96,7 +94,7 @@ public class SessionRepositoryTest {
     @Test
     public void stateTransitionAction_shouldUpdateDatastore() {
         SessionStartedState sessionStartedState = aSessionStartedState().withSessionExpiryTimestamp(defaultSessionExpiry).build();
-        SessionId sessionId = sessionRepository.createSession(sessionStartedState);
+        SessionId sessionId = sessionRepository.createSession(sessionStartedState, aSessionFromSessionStartedState(sessionStartedState));
 
         sessionRepository.getStateController(sessionId, SessionStartedState.class);
         verify(controllerFactory).build(eq(sessionStartedState), stateTransitionActionArgumentCaptor.capture());
@@ -110,7 +108,7 @@ public class SessionRepositoryTest {
     public void getState_shouldGetAnInterfaceImplementation() {
 
         SessionStartedState sessionStartedState = aSessionStartedState().withSessionExpiryTimestamp(defaultSessionExpiry).build();
-        SessionId sessionId = sessionRepository.createSession(sessionStartedState);
+        SessionId sessionId = sessionRepository.createSession(sessionStartedState, aSessionFromSessionStartedState(sessionStartedState));
         sessionRepository.getStateController(sessionId, SessionStartedState.class);
         verify(controllerFactory).build(eq(sessionStartedState), stateTransitionActionArgumentCaptor.capture());
         TestState state = new TestState();
@@ -127,7 +125,7 @@ public class SessionRepositoryTest {
         DateTimeFreezer.freezeTime(now);
 
         SessionStartedState sessionStartedState = aSessionStartedState().withSessionExpiryTimestamp(now).build();
-        SessionId sessionId = sessionRepository.createSession(sessionStartedState);
+        SessionId sessionId = sessionRepository.createSession(sessionStartedState, aSessionFromSessionStartedState(sessionStartedState));
 
         DateTimeFreezer.freezeTime(now.plusMinutes(3));
         sessionRepository.getStateController(sessionId, SessionStartedState.class);
@@ -140,7 +138,7 @@ public class SessionRepositoryTest {
         DateTimeFreezer.freezeTime(now);
 
         SessionStartedState sessionStartedState = aSessionStartedState().withSessionExpiryTimestamp(now).build();
-        SessionId sessionId = sessionRepository.createSession(sessionStartedState);
+        SessionId sessionId = sessionRepository.createSession(sessionStartedState, aSessionFromSessionStartedState(sessionStartedState));
 
         DateTimeFreezer.freezeTime(now.plusMinutes(3));
         try {
@@ -160,7 +158,7 @@ public class SessionRepositoryTest {
         DateTimeFreezer.freezeTime(now);
 
         SessionStartedState sessionStartedState = aSessionStartedState().withSessionExpiryTimestamp(now).build();
-        SessionId sessionId = sessionRepository.createSession(sessionStartedState);
+        SessionId sessionId = sessionRepository.createSession(sessionStartedState, aSessionFromSessionStartedState(sessionStartedState));
 
         DateTimeFreezer.freezeTime(now.plusMinutes(3));
         try {
@@ -179,7 +177,7 @@ public class SessionRepositoryTest {
         DateTimeFreezer.freezeTime(now);
 
         SessionStartedState sessionStartedState = aSessionStartedState().withSessionExpiryTimestamp(now).build();
-        SessionId sessionId = sessionRepository.createSession(sessionStartedState);
+        SessionId sessionId = sessionRepository.createSession(sessionStartedState, aSessionFromSessionStartedState(sessionStartedState));
 
         DateTimeFreezer.freezeTime(now.plusMinutes(3));
 
@@ -204,7 +202,7 @@ public class SessionRepositoryTest {
     public void getLevelOfAssuranceFromIdp(){
         SessionStartedState state = aSessionStartedState().build();
 
-        SessionId sessionId = sessionRepository.createSession(state);
+        SessionId sessionId = sessionRepository.createSession(state,  aSessionFromSessionStartedState(state));
 
         assertThat(sessionRepository.getLevelOfAssuranceFromIdp(sessionId)).isEqualTo(Optional.absent());
     }
