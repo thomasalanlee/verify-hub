@@ -39,12 +39,12 @@ public class AuthnRequestFromTransactionResource {
     @Path(Urls.PolicyUrls.AUTHN_REQUEST_SELECT_IDP_PATH)
     @Timed
     public Response selectIdentityProvider(
-            @PathParam(SESSION_ID_PARAM) SessionId sessionIdParameter, @Valid IdpSelected idpSelected) {
+            @PathParam(SESSION_ID_PARAM) SessionId sessionId, @Valid IdpSelected idpSelected) {
 
         if (idpSelected.isRegistration()){
-            idpSelectedEventHandler.register(sessionIdParameter.getSessionId());
+            idpSelectedEventHandler.register(sessionId);
         }else{
-            idpSelectedEventHandler.signin(sessionIdParameter.getSessionId());
+            idpSelectedEventHandler.signin(sessionId);
         }
 
         //authnRequestFromTransactionHandler.selectIdpForGivenSessionId(sessionIdParameter, idpSelected);

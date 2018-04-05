@@ -233,7 +233,7 @@ public class HubEventLogger {
         //details.put(principal_ip_address_as_seen_by_hub, principalIpAddress);
         details.put(minimum_level_of_assurance, levelsOfAssurance.get(0).name());
         details.put(required_level_of_assurance, levelsOfAssurance.get(levelsOfAssurance.size() - 1).name());
-        logSessionEvent(session.getFullSessionId(), session.getRequestIssuerEntityId(), session.getSessionExpiryTimestamp(), session.getRequestId(), IDP_SELECTED, details);
+        logSessionEvent(session.getSessionId(), session.getRequestIssuerEntityId(), session.getSessionExpiryTimestamp(), session.getRequestId(), IDP_SELECTED, details);
     }
 
     public void logIdpSelectedEvent(IdpSelectedState idpSelectedState, String principalIpAddress) {
