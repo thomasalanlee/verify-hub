@@ -10,6 +10,8 @@ import uk.gov.ida.hub.policy.domain.state.EidasSuccessfulMatchState;
 import uk.gov.ida.hub.policy.domain.state.IdpSelectedState;
 import uk.gov.ida.hub.policy.domain.state.SessionStartedState;
 import uk.gov.ida.hub.policy.domain.state.SuccessfulMatchState;
+import uk.gov.ida.hub.policy.statemachine.Session;
+import uk.gov.ida.hub.policy.statemachine.StateTNG;
 import uk.gov.ida.integrationtest.hub.policy.rest.Cycle3DTO;
 import uk.gov.ida.integrationtest.hub.policy.rest.EidasCycle3DTO;
 
@@ -58,6 +60,9 @@ public class TestSessionResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response createSessionInSuccessfulMatchState(TestSessionDto testSessionDto) {
+        Session session = new Session();
+        session.setSessionId(testSessionDto.getSessionId());
+        session.setCurrentState(StateTNG.Successful_Match);
         testSessionRepository.createSession(testSessionDto.getSessionId(),
                 new SuccessfulMatchState(
                         testSessionDto.getRequestId(),
@@ -70,8 +75,9 @@ public class TestSessionResource {
                         testSessionDto.getSessionId(),
                         testSessionDto.getLevelsOfAssurance().get(testSessionDto.getLevelsOfAssurance().size()-1),
                         testSessionDto.isRegistering(),
-                        testSessionDto.getTransactionSupportsEidas())
-                        );
+                        testSessionDto.getTransactionSupportsEidas()),
+                session);
+
         return Response.ok().build();
     }
 

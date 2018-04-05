@@ -27,6 +27,7 @@ import uk.gov.ida.hub.policy.domain.state.SessionStartedState;
 import uk.gov.ida.hub.policy.logging.HubEventLogger;
 import uk.gov.ida.hub.policy.proxy.TransactionsConfigProxy;
 import uk.gov.ida.hub.policy.statemachine.Session;
+import uk.gov.ida.hub.policy.statemachine.StateTNG;
 
 import javax.inject.Inject;
 import java.net.URI;
@@ -71,6 +72,7 @@ public class AuthnRequestFromTransactionHandler {
 
         Session session = new Session();
         session.setSessionId(sessionId);
+        session.setCurrentState(StateTNG.Session_Started);
         session.setRequestId(samlResponse.getId());
         session.setRequestIssuerEntityId(samlResponse.getIssuer());
         session.setSessionExpiryTimestamp(sessionExpiryTimestamp);

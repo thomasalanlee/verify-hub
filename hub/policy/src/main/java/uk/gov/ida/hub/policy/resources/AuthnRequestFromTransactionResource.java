@@ -3,12 +3,10 @@ package uk.gov.ida.hub.policy.resources;
 import com.codahale.metrics.annotation.Timed;
 import uk.gov.ida.hub.policy.Urls;
 import uk.gov.ida.hub.policy.controllogic.AuthnRequestFromTransactionHandler;
-import uk.gov.ida.hub.policy.controllogic.IdpSelectedEventHandler;
-import uk.gov.ida.hub.policy.domain.AuthnRequestSignInDetailsDto;
-import uk.gov.ida.hub.policy.domain.AuthnRequestSignInProcess;
-import uk.gov.ida.hub.policy.domain.IdpSelected;
-import uk.gov.ida.hub.policy.domain.SessionId;
+import uk.gov.ida.hub.policy.domain.*;
+import uk.gov.ida.hub.policy.eventhandler.IdpSelectedEventHandler;
 import uk.gov.ida.hub.policy.logging.HubEventLogger;
+import uk.gov.ida.hub.policy.statemachine.Event;
 
 import javax.inject.Inject;
 import javax.validation.Valid;
@@ -26,13 +24,15 @@ import static uk.gov.ida.hub.policy.Urls.SharedUrls.SESSION_ID_PARAM;
 @Produces(MediaType.APPLICATION_JSON)
 public class AuthnRequestFromTransactionResource {
     private final AuthnRequestFromTransactionHandler authnRequestFromTransactionHandler;
-    private IdpSelectedEventHandler idpSelectedEventHandler;
+    private final SessionRepository sessionRepository;
+    private final HubEventLogger hubEventLogger;
 
     @Inject
     public AuthnRequestFromTransactionResource(
-            AuthnRequestFromTransactionHandler authnRequestFromTransactionHandler, IdpSelectedEventHandler idpSelectedEventHandler) {
+            AuthnRequestFromTransactionHandler authnRequestFromTransactionHandler, SessionRepository sessionRepository, HubEventLogger hubEventLogger) {
         this.authnRequestFromTransactionHandler = authnRequestFromTransactionHandler;
-        this.idpSelectedEventHandler = idpSelectedEventHandler;
+        this.sessionRepository = sessionRepository;
+        this.hubEventLogger = hubEventLogger;
     }
 
     @POST
@@ -41,13 +41,15 @@ public class AuthnRequestFromTransactionResource {
     public Response selectIdentityProvider(
             @PathParam(SESSION_ID_PARAM) SessionId sessionId, @Valid IdpSelected idpSelected) {
 
+        IdpSelectedEventHandler idpSelectedEventHandler = new IdpSelectedEventHandler(sessionRepository, hubEventLogger, sessionId, idpSelected.getSelectedIdpEntityId());
+
         if (idpSelected.isRegistration()){
-            idpSelectedEventHandler.register(sessionId);
+            idpSelectedEventHandler.handleEvent(Event.Idp_Selected);
         }else{
-            idpSelectedEventHandler.signin(sessionId);
+            idpSelectedEventHandler.handleEvent(Event.Idp_Selected_For_Registration);
         }
 
-        //authnRequestFromTransactionHandler.selectIdpForGivenSessionId(sessionIdParameter, idpSelected);
+        authnRequestFromTransactionHandler.selectIdpForGivenSessionId(sessionId, idpSelected);
 
         return Response.status(Response.Status.CREATED).build();
     }
