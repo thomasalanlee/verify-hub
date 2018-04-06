@@ -31,6 +31,9 @@ import uk.gov.ida.hub.policy.logging.HubEventLogger;
 import uk.gov.ida.hub.policy.proxy.IdentityProvidersConfigProxy;
 import uk.gov.ida.hub.policy.proxy.MatchingServiceConfigProxy;
 import uk.gov.ida.hub.policy.proxy.TransactionsConfigProxy;
+import uk.gov.ida.hub.policy.statemachine.MegaStateInfo;
+import uk.gov.ida.hub.policy.statemachine.PolicyEvents;
+import uk.gov.ida.hub.policy.statemachine.PolicyStateMachine;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +51,8 @@ public class IdpSelectedStateController implements StateController, ErrorRespons
     private final AssertionRestrictionsFactory assertionRestrictionFactory;
     private final MatchingServiceConfigProxy matchingServiceConfigProxy;
     private final PolicyConfiguration policyConfiguration;
+
+    private final PolicyStateMachine policyStateMachine;
 
     public IdpSelectedStateController(
             final IdpSelectedState state,
@@ -69,6 +74,8 @@ public class IdpSelectedStateController implements StateController, ErrorRespons
         this.assertionRestrictionFactory = assertionRestrictionsFactory;
         this.matchingServiceConfigProxy = matchingServiceConfigProxy;
         this.policyConfiguration = policyConfiguration;
+
+        policyStateMachine = new PolicyStateMachine();
     }
 
     public AuthnRequestFromHub getRequestFromHub() {
@@ -124,6 +131,20 @@ public class IdpSelectedStateController implements StateController, ErrorRespons
     public void handlePausedRegistrationResponseFromIdp(String requestIssuerEntityId, String principalIdAsSeenByHub, Optional<LevelOfAssurance> responseLoa) {
         validateIdpIsEnabledAndWasIssuedWithRequest(requestIssuerEntityId, state.isRegistering(), responseLoa.orElseGet(state::getRequestedLoa), state.getRequestIssuerEntityId());
         hubEventLogger.logPausedRegistrationEvent(state.getSessionId(), state.getRequestIssuerEntityId(), state.getSessionExpiryTimestamp(), state.getRequestId(), principalIdAsSeenByHub);
+
+        MegaStateInfo megaStateInfo = MegaStateInfo.MegaStateInfoBuilder.aMegaStateInfo()
+                .withRequestId(state.getRequestId())
+                .withRequestIssuerId(state.getRequestIssuerEntityId())
+                .withSessionExpiryTimestamp(state.getSessionExpiryTimestamp())
+                .withAssertionConsumerServiceUri(state.getAssertionConsumerServiceUri())
+                .withsessionId(state.getSessionId())
+                .withtransactionSupportsEidas(state.getTransactionSupportsEidas())
+                .withRelayState(state.getRelayState().orNull())
+                .build();
+
+        State newState = policyStateMachine.determineState(state.getNewState(), PolicyEvents.IDP_PAUSED_REGISTRATION).toOldStyleState(megaStateInfo);
+
+        stateTransitionAction.transitionTo(newState);
         stateTransitionAction.transitionTo(createPausedRegistrationState());
     }
 
@@ -309,7 +330,28 @@ public class IdpSelectedStateController implements StateController, ErrorRespons
     @Override
     public void handleIdpSelected(String idpEntityId, String principalIpAddress, boolean registering, LevelOfAssurance requestedLoa) {
         IdpSelectedState idpSelectedState = IdpSelector.buildIdpSelectedState(state, idpEntityId, registering, requestedLoa, transactionsConfigProxy, identityProvidersConfigProxy);
-        stateTransitionAction.transitionTo(idpSelectedState);
+
+        MegaStateInfo megaStateInfo = MegaStateInfo.MegaStateInfoBuilder.aMegaStateInfo()
+                .withRequestId(idpSelectedState.getRequestId())
+                .withIdpEntity(idpSelectedState.getIdpEntityId())
+                .withMatchingServiceEntityId(idpSelectedState.getMatchingServiceEntityId())
+                .with(idpSelectedState.getLevelsOfAssurance())
+                .withUseExactComparisonType(idpSelectedState.getUseExactComparisonType())
+                .withForceAuthentication(idpSelectedState.getForceAuthentication().orNull())
+                .withAssertionConsumerServiceUri(idpSelectedState.getAssertionConsumerServiceUri())
+                .withRequestIssuerId(idpSelectedState.getRequestIssuerEntityId())
+                .withRelayState(idpSelectedState.getRelayState().orNull())
+                .withSessionExpiryTimestamp(idpSelectedState.getSessionExpiryTimestamp())
+                .withRegistering(idpSelectedState.isRegistering())
+                .withRequestedLoa(idpSelectedState.getRequestedLoa())
+                .withsessionId(idpSelectedState.getSessionId())
+                .withavailableIdentityProviders(idpSelectedState.getAvailableIdentityProviderEntityIds())
+                .withtransactionSupportsEidas(idpSelectedState.getTransactionSupportsEidas())
+                .build();
+
+        State newState = policyStateMachine.determineState(state.getNewState(), PolicyEvents.SELECT_IDP).toOldStyleState(megaStateInfo);
+
+        stateTransitionAction.transitionTo(newState);
         hubEventLogger.logIdpSelectedEvent(idpSelectedState, principalIpAddress);
     }
 

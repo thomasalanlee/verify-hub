@@ -5,6 +5,8 @@ import org.joda.time.DateTime;
 import uk.gov.ida.hub.policy.domain.AbstractState;
 import uk.gov.ida.hub.policy.domain.LevelOfAssurance;
 import uk.gov.ida.hub.policy.domain.SessionId;
+import uk.gov.ida.hub.policy.statemachine.PolicyState;
+import uk.gov.ida.hub.policy.statemachine.SelectIdpState;
 
 import java.io.Serializable;
 import java.net.URI;
@@ -87,5 +89,10 @@ public class IdpSelectedState extends AbstractState implements IdpSelectingState
 
     public List<LevelOfAssurance> getLevelsOfAssurance() {
         return levelsOfAssurance;
+    }
+
+    @Override
+    public PolicyState getNewState() {
+        return new SelectIdpState();
     }
 }
