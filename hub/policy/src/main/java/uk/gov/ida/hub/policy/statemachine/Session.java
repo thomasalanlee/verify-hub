@@ -22,10 +22,11 @@ public class Session {
         Session session = new Session();
         session.setSessionId(sessionId);
 
-
-
-
         return session;
+    }
+
+    public boolean isTimedOut() {
+        return sessionExpiryTimestamp == null || sessionExpiryTimestamp.isBeforeNow();
     }
 
     public SessionId getSessionId(){
@@ -84,11 +85,6 @@ public class Session {
     public void setIdpEntityId(String idpEntityId) {
         this.idpEntityId = idpEntityId;
     }
-
-
-
-
-
 
 
 }

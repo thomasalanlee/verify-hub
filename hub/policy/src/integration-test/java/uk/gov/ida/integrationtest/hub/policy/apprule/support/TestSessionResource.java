@@ -62,6 +62,7 @@ public class TestSessionResource {
     public Response createSessionInSuccessfulMatchState(TestSessionDto testSessionDto) {
         Session session = new Session();
         session.setSessionId(testSessionDto.getSessionId());
+        session.setSessionExpiryTimestamp(testSessionDto.getSessionExpiryTimestamp());
         session.setCurrentState(StateTNG.Successful_Match);
         testSessionRepository.createSession(testSessionDto.getSessionId(),
                 new SuccessfulMatchState(

@@ -1,15 +1,18 @@
 package uk.gov.ida.hub.policy.statemachine;
 
+import javax.validation.constraints.NotNull;
+
 public class StateMachine {
 
 
-    public static StateTNG transition(StateTNG currentState, Event event){
+    public static StateTNG transition(@NotNull StateTNG currentState, @NotNull Event event){
         switch (currentState){
 
             case Authn_Failed_Error:
                 switch(event){
                     case Idp_Selected: return StateTNG.Idp_Selected;
                     case Try_Another_Idp_Selected: return StateTNG.Session_Started;
+                    case Session_Time_Out_Triggered: return StateTNG.Session_Timed_Out;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
 
@@ -17,6 +20,7 @@ public class StateMachine {
                 switch(event){
                     case Cancellation_Received: return StateTNG.Cycle3_Data_Input_Cancelled;
                     case Cycle3_Data_Submitted: return StateTNG.Cycle3_Match_Request_Sent;
+                    case Session_Time_Out_Triggered: return StateTNG.Session_Timed_Out;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
 
@@ -24,6 +28,7 @@ public class StateMachine {
                 switch(event){
                     case Country_Selected: return StateTNG.Country_Selected;
                     case Transition_To_Eidas_Cycle0_And1_Match_Request_Sent_State: return StateTNG.Eidas_Cycle0_And1_Match_Request_Sent;
+                    case Session_Time_Out_Triggered: return StateTNG.Session_Timed_Out;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
 
@@ -37,6 +42,7 @@ public class StateMachine {
                     case User_Account_Creation_Failed_Response_From_Matching_Service: return StateTNG.NULL;
                     case Match_Response_From_Matching_Service: return StateTNG.Successful_Match;
 //                    case No_Match_Response_From_Matching_Service: return StateTNG.User_Account_Ceation_Request_Sent;
+                    case Session_Time_Out_Triggered: return StateTNG.Session_Timed_Out;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
 
@@ -54,6 +60,7 @@ public class StateMachine {
                     case User_Account_Creation_Failed_Response_From_Matching_Service: return StateTNG.NULL;
                     case Match_Response_From_Matching_Service: return StateTNG.Successful_Match;
                     case No_Match_Response_From_Matching_Service: return StateTNG.Successful_Match;
+                    case Session_Time_Out_Triggered: return StateTNG.Session_Timed_Out;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
 
@@ -72,7 +79,7 @@ public class StateMachine {
 //                    case No_Match_Response_From_Matching_Service: return StateTNG.No_Match;
                     case User_Account_Created_Response_From_Matching_Service: return StateTNG.NULL;
                     case User_Account_Creation_Failed_Response_From_Matching_Service: return StateTNG.NULL;
-
+                    case Session_Time_Out_Triggered: return StateTNG.Session_Timed_Out;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
 
@@ -95,12 +102,13 @@ public class StateMachine {
                 switch(event){
                     case Authentication_Failed_Response_From_Idp: return StateTNG.Authn_Failed_Error;
                     case No_Authentication_Context_Response_From_Idp: return StateTNG.Authn_Failed_Error;
-                    case Success_Response_From_Idp_Recieved: return StateTNG.Cycle0_And1_Match_Request_Sent;
+                    case Success_Response_From_Idp_Received: return StateTNG.Cycle0_And1_Match_Request_Sent;
                     case Fraud_Response_From_Idp: return StateTNG.Fraud_Event_Detected;
                     case Idp_Selected: return StateTNG.Idp_Selected;
                     case Paused_Registration_Response_From_Idp: return StateTNG.Paused_Registration;
                     case Requester_Error_Response_From_Idp: return StateTNG.Requester_Error;
 //                    case No_Authentication_Context_Response_From_Idp: return StateTNG.Session_Started;
+                    case Session_Time_Out_Triggered: return StateTNG.Session_Timed_Out;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
             case Matching_Service_Request_Error:
@@ -121,6 +129,7 @@ public class StateMachine {
             case Requester_Error:
                 switch(event){
                     case Idp_Selected: return StateTNG.Idp_Selected;
+                    case Session_Time_Out_Triggered: return StateTNG.Session_Timed_Out;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
 
@@ -129,22 +138,12 @@ public class StateMachine {
                     case Idp_Selected: return StateTNG.Idp_Selected;
                     case Idp_Selected_For_Registration: return StateTNG.Registering_With_Idp;
                     case Country_Selected: return StateTNG.Country_Selected;
+                    case Session_Time_Out_Triggered: return StateTNG.Session_Timed_Out;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
 
             case Successful_Match:
                 switch(event){
-                    default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
-                }
-
-            case User_Account_Ceation_Request_Sent:
-                switch(event){
-                    case Response_Processing_Details_Received: return StateTNG.Matching_Service_Request_Error;
-                    case Request_Failure: return StateTNG.Matching_Service_Request_Error;
-                    case Match_Response_From_Matching_Service: return StateTNG.NULL;
-                    case No_Match_Response_From_Matching_Service: return StateTNG.NULL;
-                    case User_Account_Created_Response_From_Matching_Service: return StateTNG.User_Account_Created;
-                    case User_Account_Creation_Failed_Response_From_Matching_Service: return StateTNG.User_Account_Creation_Failed;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
 
@@ -160,6 +159,13 @@ public class StateMachine {
 
             case User_Account_Creation_Request_Sent:
                 switch(event){
+                    case Response_Processing_Details_Received: return StateTNG.Matching_Service_Request_Error;
+                    case Request_Failure: return StateTNG.Matching_Service_Request_Error;
+                    case Match_Response_From_Matching_Service: return StateTNG.NULL;
+                    case No_Match_Response_From_Matching_Service: return StateTNG.NULL;
+                    case User_Account_Created_Response_From_Matching_Service: return StateTNG.User_Account_Created;
+                    case User_Account_Creation_Failed_Response_From_Matching_Service: return StateTNG.User_Account_Creation_Failed;
+                    case Session_Time_Out_Triggered: return StateTNG.Session_Timed_Out;
                     default: throw new InvalidStateException("Current State "+currentState+" cannot accept event "+event);
                 }
         }
