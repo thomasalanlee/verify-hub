@@ -11,14 +11,12 @@ import org.opensaml.saml.saml2.metadata.IDPSSODescriptor;
 import org.opensaml.saml.saml2.metadata.SingleSignOnService;
 import uk.gov.ida.common.ExceptionType;
 import uk.gov.ida.exceptions.ApplicationException;
-import uk.gov.ida.hub.samlengine.EidasMetadataResolver;
+import uk.gov.ida.hub.samlengine.exceptions.UnknownEidasEntityException;
 import uk.gov.ida.saml.metadata.EidasMetadataResolverRepository;
 
 import javax.inject.Inject;
-import javax.ws.rs.client.Client;
 import java.net.URI;
 import java.util.List;
-import java.util.Timer;
 import java.util.UUID;
 
 import static com.google.common.base.Throwables.propagate;
@@ -36,7 +34,8 @@ public class CountrySingleSignOnServiceHelper {
     }
 
     public URI getSingleSignOn(String entityId) {
-        MetadataResolver metadataResolver = metadataResolverRepository.getMetadataResolver(entityId);
+        MetadataResolver metadataResolver = metadataResolverRepository.getMetadataResolver(entityId)
+                .orElseThrow(() -> new UnknownEidasEntityException(entityId));
 
         EntityDescriptor idpEntityDescriptor;
         try {

@@ -23,6 +23,7 @@ import uk.gov.ida.saml.security.EncryptionCredentialFactory;
 import uk.gov.ida.saml.security.EncryptionKeyStore;
 import uk.gov.ida.saml.security.IdaKeyStore;
 import uk.gov.ida.saml.security.IdaKeyStoreCredentialRetriever;
+import uk.gov.ida.saml.security.KeyStoreBackedEncryptionCredentialResolver;
 import uk.gov.ida.saml.security.SignatureFactory;
 import uk.gov.ida.saml.security.SigningKeyStore;
 import uk.gov.ida.truststore.KeyStoreCache;
@@ -50,8 +51,8 @@ public class CryptoModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public EncryptionCredentialFactory getEncryptionCredentialFactory(EncryptionKeyStore keyStore) {
-        return new EncryptionCredentialFactory(keyStore);
+    public KeyStoreBackedEncryptionCredentialResolver getEncryptionCredentialFactory(EncryptionKeyStore keyStore) {
+        return new KeyStoreBackedEncryptionCredentialResolver(keyStore);
     }
 
     @Provides

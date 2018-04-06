@@ -19,6 +19,7 @@ import org.opensaml.saml.saml2.metadata.impl.SingleSignOnServiceBuilder;
 import uk.gov.ida.saml.metadata.EidasMetadataResolverRepository;
 
 import java.net.URI;
+import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
@@ -41,7 +42,7 @@ public class CountrySingleSignOnServiceHelperTest {
 
     @Before
     public void setUp(){
-        when(eidasMetadataResolverRepository.getMetadataResolver(entityId)).thenReturn(metadataResolver);
+        when(eidasMetadataResolverRepository.getMetadataResolver(entityId)).thenReturn(Optional.of(metadataResolver));
     }
 
     @Test
