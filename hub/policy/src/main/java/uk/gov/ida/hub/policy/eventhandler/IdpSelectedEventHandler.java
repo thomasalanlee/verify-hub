@@ -29,6 +29,7 @@ public class IdpSelectedEventHandler extends StateMachineEventHandler {
 
     @Override
     public void delegatedEventHandling(Session session) {
+
         session.setIdpEntityId(selectedIdpEntityId);
     }
 

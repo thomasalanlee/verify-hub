@@ -43,6 +43,8 @@ public abstract class StateMachineEventHandler {
         startState = session.getCurrentState();
         endState = StateMachine.transition(startState, Event.Session_Time_Out_Triggered);
 
+
+
         session.setCurrentState(endState);
         sessionRepository.updateSession(session);
         SessionId sessionId = session.getSessionId();
